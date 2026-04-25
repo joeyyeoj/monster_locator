@@ -1,10 +1,9 @@
-"use client";
-
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import NavAppButtons from "@/components/NavAppButtons";
-import TemperatureVoteButtons from "@/components/TemperatureVoteButtons";
-import VoteButtons from "@/components/VoteButtons";
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import LocationDetailClient from "@/components/LocationDetailClient";
+import { getLocationById } from "@/lib/services/locationService";
+import { getSiteUrl } from "@/lib/site";
 import type { LocationRecord } from "@/lib/types";
 
 type Props = {
@@ -24,55 +23,92 @@ function availabilityText(value: LocationRecord["availabilityType"]): string {
   return "Temperatuur niet bevestigd";
 }
 
-export default function LocationDetailPage({ params }: Props) {
-  const [locationId, setLocationId] = useState<string>("");
-  const [location, setLocation] = useState<LocationRecord | null>(null);
-  const [status, setStatus] = useState("Locatie laden...");
+function buildLocationTitle(location: LocationRecord): string {
+  return `${location.name} - Monster verkrijgbaar`;
+}
 
-  useEffect(() => {
-    void params.then((resolved) => setLocationId(resolved.id));
-  }, [params]);
+function buildLocationDescription(location: LocationRecord): string {
+  return `${location.name} op ${location.address}. ${availabilityText(location.availabilityType)}.`;
+}
 
-  useEffect(() => {
-    if (!locationId) {
-      return;
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  const location = await getLocationById(id);
+
+  if (!location) {
+    return {
+      title: "Locatie niet gevonden",
+      description: "De gevraagde locatie kon niet worden gevonden."
+    };
+  }
+
+  const title = buildLocationTitle(location);
+  const description = buildLocationDescription(location);
+  const path = `/location/${location.id}`;
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: path
+    },
+    openGraph: {
+      title,
+      description,
+      type: "article",
+      locale: "nl_NL",
+      url: path
+    },
+    twitter: {
+      card: "summary",
+      title,
+      description
     }
+  };
+}
 
-    void (async () => {
-      const response = await fetch(`/api/locations/${locationId}`);
-      if (!response.ok) {
-        setStatus("Locatie niet gevonden.");
-        return;
-      }
-      const data = (await response.json()) as { location: LocationRecord };
-      setLocation(data.location);
-      setStatus("Geladen.");
-    })();
-  }, [locationId]);
+export default async function LocationDetailPage({ params }: Props) {
+  const { id } = await params;
+  const location = await getLocationById(id);
+
+  if (!location) {
+    notFound();
+  }
+
+  const siteUrl = getSiteUrl();
+  const canonicalUrl = `${siteUrl}/location/${location.id}`;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Store",
+    name: location.name,
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: location.address,
+      addressCountry: "NL"
+    },
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: location.lat,
+      longitude: location.lng
+    },
+    url: canonicalUrl,
+    description: buildLocationDescription(location)
+  };
 
   return (
     <main style={{ maxWidth: 760, margin: "0 auto", padding: "1rem", display: "grid", gap: "1rem" }}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <Link href="/">Terug naar kaart</Link>
-      {location ? (
-        <section style={{ background: "#fff", border: "1px solid #dbe2f0", borderRadius: 12, padding: "1rem" }}>
-          <h1 style={{ marginTop: 0 }}>{location.name}</h1>
-          <p>{location.address}</p>
-          <p>{availabilityText(location.availabilityType)}</p>
-          <p>
-            Bevestigd: {location.confirmCount} | Afgekeurd: {location.denyCount} | Vertrouwensscore:{" "}
-            {location.trustScore}
-          </p>
-          <NavAppButtons location={location} />
-          <div style={{ marginTop: "0.8rem" }}>
-            <TemperatureVoteButtons location={location} onVoted={setLocation} />
-          </div>
-          <div style={{ marginTop: "0.8rem" }}>
-            <VoteButtons location={location} onVoted={setLocation} />
-          </div>
-        </section>
-      ) : (
-        <p>{status}</p>
-      )}
+      <section style={{ background: "#fff", border: "1px solid #dbe2f0", borderRadius: 12, padding: "1rem" }}>
+        <h1 style={{ marginTop: 0 }}>{location.name}</h1>
+        <p>{location.address}</p>
+        <p>{availabilityText(location.availabilityType)}</p>
+        <p>
+          Bevestigd: {location.confirmCount} | Afgekeurd: {location.denyCount} | Vertrouwensscore:{" "}
+          {location.trustScore}
+        </p>
+        <LocationDetailClient initialLocation={location} />
+      </section>
     </main>
   );
 }

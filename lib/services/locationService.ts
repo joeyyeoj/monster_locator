@@ -366,6 +366,27 @@ export async function getLocationById(id: string): Promise<LocationRecord | null
   }
 }
 
+export async function getIndexableLocations(): Promise<Array<{ id: string; updatedAt: string }>> {
+  await ensureSeedData();
+
+  try {
+    const locations = await prisma.location.findMany({
+      where: { moderationFlag: false },
+      select: { id: true, updatedAt: true }
+    });
+
+    return locations.map((location) => ({
+      id: location.id,
+      updatedAt: location.updatedAt.toISOString()
+    }));
+  } catch {
+    return memoryLocations.map((location) => ({
+      id: location.id,
+      updatedAt: location.updatedAt
+    }));
+  }
+}
+
 export async function createSubmission(
   payload: ResolvedSubmissionPayload,
   submitterHash: string,
