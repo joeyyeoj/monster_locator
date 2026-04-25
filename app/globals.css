@@ -1,0 +1,48 @@
+:root {
+  color-scheme: light;
+  font-family: "Rajdhani", "Inter", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  --monster-bg: #f3f5f4;
+  --monster-surface: rgba(255, 255, 255, 0.92);
+  --monster-surface-strong: rgba(255, 255, 255, 0.98);
+  --monster-border: #8edb79;
+  --monster-neon: #5cae46;
+  --monster-neon-soft: #7fca6b;
+  --monster-text: #0d1110;
+  --monster-muted: #4d5c55;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(circle at top, #ffffff 0%, var(--monster-bg) 70%);
+  color: var(--monster-text);
+}
+
+a {
+  color: inherit;
+}
+
+input,
+select,
+textarea,
+button {
+  font: inherit;
+}
+
+input,
+select,
+textarea {
+  background: rgba(255, 255, 255, 0.96);
+  color: var(--monster-text);
+  border: 1px solid #c8d4cd;
+  border-radius: 10px;
+  padding: 0.58rem 0.65rem;
+}
+
+button,
+a {
+  transition: all 140ms ease;
+}

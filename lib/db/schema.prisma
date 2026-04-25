@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum SourceType {
+  seeded
+  user_submitted
+}
+
+enum AvailabilityType {
+  cold
+  shelf
+  unknown
+}
+
+enum SubmissionStatus {
+  pending
+  approved
+  rejected
+}
+
+enum VoteType {
+  confirm
+  deny
+}
+
+model Location {
+  id               String           @id @default(cuid())
+  name             String
+  address          String
+  placeType        String
+  lat              Float
+  lng              Float
+  sourceType       SourceType
+  availabilityType AvailabilityType
+  trustScore       Int              @default(0)
+  moderationFlag   Boolean          @default(false)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  votes            Vote[]
+  submissions      Submission[]
+
+  @@index([lat, lng])
+  @@unique([name, address], map: "name_address")
+}
+
+model Vote {
+  id         String   @id @default(cuid())
+  locationId String
+  voteType   VoteType
+  voterHash  String
+  createdAt  DateTime @default(now())
+  location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@unique([locationId, voterHash])
+  @@index([locationId])
+}
+
+model Submission {
+  id            String           @id @default(cuid())
+  locationId    String?
+  submitterHash String
+  name          String
+  address       String
+  placeType     String
+  lat           Float
+  lng           Float
+  availabilityType AvailabilityType
+  note          String?
+  status        SubmissionStatus @default(pending)
+  createdAt     DateTime         @default(now())
+  location      Location?        @relation(fields: [locationId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+}

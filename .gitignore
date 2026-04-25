@@ -1,0 +1,26 @@
+.next
+out
+node_modules
+.env
+.env.local
+.env.*
+!.env.example
+coverage
+dist
+*.log
+.eslintcache
+*.tsbuildinfo
+.vercel/
+
+# macOS
+.DS_Store
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Caches and temp files
+.cache/
+.nyc_output/
+tmp/
