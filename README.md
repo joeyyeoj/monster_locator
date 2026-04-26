@@ -1,15 +1,13 @@
 # Waar kan ik een monstertje halen? 🧊🥤
 
-Een [Next.js](https://nextjs.org/)-app voor de échte vragen in het leven: **waar in de buurt krijg ik mijn (suikervrije) Monster fix?** Geen mysterieuze energy-drank, maar wel een duidelijke kaart, winkels in je straal, en community-weetjes over koude kast versus kamertemperatuur.
+Een [Next.js](https://nextjs.org/)-app voor de échte vragen in het leven: **waar in de buurt krijg ik mijn (suikervrije) Monster fix?** Geen mysterieuze energy-drank, maar wel een duidelijke kaart, winkels in je omgeving, en community-weetjes over gekoeld versus kamertemperatuur.
 
 ## Wat doet die?
 
 - **Kaart + jouw locatie** — toestemming gegeven? Dan draait de kaart mee, niet alleen de pin. Geen toestemming? Dan toont ie braaf Utrecht of waar je anders in belandt.
 - **Dichtstbijzijnde winkels** binnen X kilometer (jij kiest de straal, het leven is al ingewikkeld genoeg).
-- **Vertrouwen, stemmen, temperatuur** — *Klopt* / *Klopt niet* voor of een plek echt telt, plus stem op koud / winkel / beide. Cijfertjes erbij, want statistieken maken alles feestelijker.
+- **Vertrouwen, stemmen, temperatuur** — *Klopt* / *Klopt niet* voor of een plek echt monster verkoopt, plus stem op koud / winkel / beide. Cijfertjes erbij, want statistieken maken alles feestelijker.
 - **Foto’s** — zie met eigen ogen of het schap er bemoedigend uitziet. Uploaden mag, binnen de grenzen van fatsoen, JPEG, PNG, WebP en 4 MB.
-
-Kortom: *crowdsourcing voor energiedrank-nerds met een kaartfetisj.*
 
 ## Stack (kort, voor op feestjes)
 
@@ -61,7 +59,7 @@ Hij heet nog steeds `monster-locator` — klinkt als iets met radar; dat is *ong
 
 ## Juridische hoeken
 
-Geen suiker in het blik, ook geen adviesrechten in dit document. *Energy drink* is een merk van derden; deze app is een hobby-/community-achtig project, geen officiële iets.
+Geen suiker in het blik, ook geen adviesrechten in dit document. *Monster Energy drink* is een merk van derden; deze app is een hobby-/community-achtig project, geen officieel iets.
 
 ---
 
