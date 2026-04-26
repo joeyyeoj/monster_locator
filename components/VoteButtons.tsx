@@ -8,6 +8,19 @@ type Props = {
   onVoted: (location: LocationRecord) => void;
 };
 
+function voteFeedbackClass(text: string): string {
+  if (text === "Stem opslaan...") {
+    return "ios-vote-feedback ios-vote-feedback--pending";
+  }
+  if (text.includes("kon niet") || text.includes("niet opgeslagen")) {
+    return "ios-vote-feedback ios-vote-feedback--err";
+  }
+  if (text.includes("opgeslagen")) {
+    return "ios-vote-feedback ios-vote-feedback--ok";
+  }
+  return "ios-vote-feedback";
+}
+
 export default function VoteButtons({ location, onVoted }: Props) {
   const [status, setStatus] = useState<string | null>(null);
 
@@ -31,39 +44,29 @@ export default function VoteButtons({ location, onVoted }: Props) {
   }
 
   return (
-    <div style={{ display: "grid", gap: "0.4rem" }}>
-      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-        <button
-          type="button"
-          onClick={() => vote("confirm")}
-          style={{
-            border: "1px solid #8edb79",
-            borderRadius: 10,
-            padding: "0.5rem 0.7rem",
-            background: "#edf9e8",
-            color: "#17461a"
-          }}
-        >
+    <div className="ios-vote-row">
+      <div className="ios-vote-btns">
+        <button type="button" onClick={() => vote("confirm")} className="ios-btn ios-btn--vote-yes">
           Klopt
         </button>
-        <button
-          type="button"
-          onClick={() => vote("deny")}
-          style={{
-            border: "1px solid #c9d3cd",
-            borderRadius: 10,
-            padding: "0.5rem 0.7rem",
-            background: "#f6f8f7",
-            color: "#2e3a33"
-          }}
-        >
+        <button type="button" onClick={() => vote("deny")} className="ios-btn ios-btn--vote-no">
           Klopt niet
         </button>
       </div>
-      <small style={{ color: "#5a675f" }}>
-        Bevestigd: {location.confirmCount} | Afgekeurd: {location.denyCount} | Vertrouwen: {location.trustScore}
-      </small>
-      {status ? <small style={{ color: "#4f9a3e" }}>{status}</small> : null}
+      <p className="ios-vote-stats-line" style={{ margin: 0 }}>
+        <span className="ios-vote-stat-yes">Bevestigd: {location.confirmCount}</span>
+        <span className="ios-vote-sep" aria-hidden>
+          {" "}
+          ·{" "}
+        </span>
+        <span className="ios-vote-stat-no">Afgekeurd: {location.denyCount}</span>
+        <span className="ios-vote-sep" aria-hidden>
+          {" "}
+          ·{" "}
+        </span>
+        <span className="ios-vote-stat-trust">Vertrouwen: {location.trustScore}</span>
+      </p>
+      {status ? <p className={voteFeedbackClass(status)} style={{ margin: 0 }}>{status}</p> : null}
     </div>
   );
 }

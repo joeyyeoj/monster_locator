@@ -35,6 +35,7 @@ model Location {
   placeType        String
   lat              Float
   lng              Float
+  photoUrl         String?
   sourceType       SourceType
   availabilityType AvailabilityType
   trustScore       Int              @default(0)
@@ -69,6 +70,7 @@ model Submission {
   placeType     String
   lat           Float
   lng           Float
+  photoUrl      String?
   availabilityType AvailabilityType
   note          String?
   status        SubmissionStatus @default(pending)

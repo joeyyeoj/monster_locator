@@ -289,6 +289,7 @@ export async function getNearbyLocations(params: {
           placeType: location.placeType,
           lat: location.lat,
           lng: location.lng,
+          photoUrl: location.photoUrl,
           availabilityType: resolveAvailabilityType(
             normalizeAvailability(location.availabilityType),
             temperatureVotes
@@ -346,6 +347,7 @@ export async function getLocationById(id: string): Promise<LocationRecord | null
       placeType: location.placeType,
       lat: location.lat,
       lng: location.lng,
+      photoUrl: location.photoUrl,
       availabilityType: resolveAvailabilityType(
         normalizeAvailability(location.availabilityType),
         temperatureVotes
@@ -421,6 +423,7 @@ export async function createSubmission(
           placeType: payload.placeType,
           lat: payload.lat,
           lng: payload.lng,
+          photoUrl: payload.photoUrl ?? null,
           availabilityType: payload.availabilityType,
           status: "rejected",
           note: duplicateCheck.isHardDuplicate
@@ -438,6 +441,7 @@ export async function createSubmission(
         placeType: payload.placeType,
         lat: payload.lat,
         lng: payload.lng,
+        photoUrl: payload.photoUrl ?? null,
         availabilityType: payload.availabilityType,
         sourceType: "user_submitted"
       }
@@ -452,6 +456,7 @@ export async function createSubmission(
         placeType: payload.placeType,
         lat: payload.lat,
         lng: payload.lng,
+        photoUrl: payload.photoUrl ?? null,
         availabilityType: payload.availabilityType,
         status: "approved",
         note: payload.note
@@ -487,6 +492,7 @@ export async function createSubmission(
       placeType: payload.placeType,
       lat: payload.lat,
       lng: payload.lng,
+      photoUrl: payload.photoUrl ?? null,
       availabilityType: payload.availabilityType,
       sourceType: "user_submitted",
       trustScore: 0,

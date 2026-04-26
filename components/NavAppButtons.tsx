@@ -16,7 +16,7 @@ const appButtons: { id: "google" | "waze" | "flitsmeister" | "apple"; label: str
 
 export default function NavAppButtons({ location }: Props) {
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+    <div className="ios-pill-chips ios-pill-chips--nav">
       {appButtons.map((app) => (
         <a
           key={app.id}
@@ -27,16 +27,7 @@ export default function NavAppButtons({ location }: Props) {
           })}
           target="_blank"
           rel="noreferrer"
-          style={{
-            border: "1px solid #b7c7bd",
-            borderRadius: 10,
-            background: "rgba(255, 255, 255, 0.96)",
-            padding: "0.45rem 0.7rem",
-            textDecoration: "none",
-            fontSize: "0.9rem",
-            color: "#0d1110",
-            boxShadow: "0 4px 10px rgba(10, 24, 12, 0.08)"
-          }}
+          className="ios-chiplink"
         >
           {app.label}
         </a>

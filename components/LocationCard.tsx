@@ -35,26 +35,20 @@ export default function LocationCard({ location, onSelect }: Props) {
     <button
       type="button"
       onClick={() => onSelect(location)}
-      style={{
-        width: "100%",
-        textAlign: "left",
-        border: "1px solid #d4ddd7",
-        borderRadius: 12,
-        background: "rgba(255, 255, 255, 0.98)",
-        padding: "0.9rem",
-        cursor: "pointer",
-        color: "#111512",
-        boxShadow: "0 4px 10px rgba(10, 24, 12, 0.06)"
-      }}
+      className="ios-loccard"
     >
-      <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem" }}>
-        <strong>{location.name}</strong>
-        <span>{location.distanceKm.toFixed(2)} km</span>
+      <div className="ios-locrow">
+        <strong className="ios-text-body" style={{ fontSize: "0.95rem" }}>
+          {location.name}
+        </strong>
+        <span className="ios-mono-slab" style={{ fontSize: "0.875rem" }}>
+          {location.distanceKm.toFixed(2)} km
+        </span>
       </div>
-      <div style={{ fontSize: "0.9rem", marginTop: "0.3rem", color: "#5a675f" }}>{location.address}</div>
-      <div style={{ fontSize: "0.85rem", marginTop: "0.4rem", color: "#4f9a3e" }}>
-        {availabilityLabel(location.availabilityType)} | {trustLabel(location.trustScore)} ({location.confirmCount}/
-        {location.denyCount})
+      <div className="ios-loccard-address">{location.address}</div>
+      <div className="ios-loccard-meta">
+        {availabilityLabel(location.availabilityType)} · {trustLabel(location.trustScore)} (
+        {location.confirmCount}/{location.denyCount})
       </div>
     </button>
   );

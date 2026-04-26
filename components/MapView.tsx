@@ -48,14 +48,7 @@ const userIcon = divIcon({
 
 export default function MapView({ center, locations, onSelect, height = "100dvh" }: MapViewProps) {
   return (
-    <div
-      style={{
-        borderRadius: 12,
-        overflow: "hidden",
-        border: "1px solid #b7c7bd",
-        boxShadow: "0 8px 24px rgba(10, 24, 12, 0.12)"
-      }}
-    >
+    <div className="ios-map-chrome" style={{ width: "100%" }}>
       <MapContainer
         center={[center.lat, center.lng]}
         zoom={12}

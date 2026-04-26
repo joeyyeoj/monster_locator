@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import LocationDetailClient from "@/components/LocationDetailClient";
@@ -57,7 +58,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description,
       type: "article",
       locale: "nl_NL",
-      url: path
+      url: path,
+      ...(location.photoUrl
+        ? { images: [{ url: location.photoUrl, alt: `${location.name} — foto` }] }
+        : {})
     },
     twitter: {
       card: "summary",
@@ -96,17 +100,36 @@ export default async function LocationDetailPage({ params }: Props) {
   };
 
   return (
-    <main style={{ maxWidth: 760, margin: "0 auto", padding: "1rem", display: "grid", gap: "1rem" }}>
+    <main className="ios-page-detail">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <Link href="/">Terug naar kaart</Link>
-      <section style={{ background: "#fff", border: "1px solid #dbe2f0", borderRadius: 12, padding: "1rem" }}>
-        <h1 style={{ marginTop: 0 }}>{location.name}</h1>
-        <p>{location.address}</p>
-        <p>{availabilityText(location.availabilityType)}</p>
-        <p>
-          Bevestigd: {location.confirmCount} | Afgekeurd: {location.denyCount} | Vertrouwensscore:{" "}
+      <Link href="/" className="ios-backlink">
+        ← Terug
+      </Link>
+      <section className="ios-card" style={{ padding: "1.1rem" }}>
+        <h1 className="ios-text-title" style={{ fontSize: "1.25rem", marginTop: 0, marginBottom: "0.5rem" }}>
+          {location.name}
+        </h1>
+        <p className="ios-text-body" style={{ fontSize: "0.95rem" }}>
+          {location.address}
+        </p>
+        <p className="ios-text-footnote">{availabilityText(location.availabilityType)}</p>
+        <p className="ios-text-footnote">
+          Bevestigd: {location.confirmCount} · Afgekeurd: {location.denyCount} · Vertrouwensscore:{" "}
           {location.trustScore}
         </p>
+        {location.photoUrl ? (
+          <div className="ios-hero" style={{ margin: "0.75rem 0" }}>
+            <Image
+              className="ios-hero--inner"
+              src={location.photoUrl}
+              alt={`Foto bij ${location.name}`}
+              width={800}
+              height={600}
+              sizes="(max-width: 760px) 100vw, 640px"
+              style={{ width: "100%", height: "auto", objectFit: "contain" }}
+            />
+          </div>
+        ) : null}
         <LocationDetailClient initialLocation={location} />
       </section>
     </main>

@@ -13,6 +13,67 @@ const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 
 const defaultCenter = { lat: 52.0907, lng: 5.1214 };
 
+function LocationShareIcon() {
+  return (
+    <svg
+      width={20}
+      height={20}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.94 8.94 0 0 0 13 3.06V1h-2v2.06A8.94 8.94 0 0 0 3.06 11H1v2h2.06A8.94 8.94 0 0 0 11 20.94V23h2v-2.06A8.94 8.94 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z" />
+    </svg>
+  );
+}
+
+function IconAddPlace() {
+  return (
+    <svg
+      width={20}
+      height={20}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z" />
+    </svg>
+  );
+}
+
+function IconClose() {
+  return (
+    <svg
+      width={20}
+      height={20}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+    </svg>
+  );
+}
+
+/** Store / winkel (Material-style storefront) for “dichtstbijzijnde winkels” */
+function IconStore() {
+  return (
+    <svg
+      width={20}
+      height={20}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M20 4H4v2h16V4zm1 10v-2l-1-5H4l-1 5v2h1v6h10v-6h4v6h2v-6h1zm-9 4H6v-4h6v4z" />
+    </svg>
+  );
+}
+
 function getTrustBadge(score: number): string {
   if (score >= 3) {
     return "Bevestigd";
@@ -36,6 +97,39 @@ export default function HomePage() {
   const [status, setStatus] = useState("Locatie ophalen...");
   const [showSubmissionModal, setShowSubmissionModal] = useState(false);
   const [showClosestModal, setShowClosestModal] = useState(false);
+  const [showLocationShareButton, setShowLocationShareButton] = useState(true);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !navigator.geolocation) {
+      queueMicrotask(() => {
+        setShowLocationShareButton(false);
+      });
+      return;
+    }
+    const permissions = navigator.permissions;
+    if (!permissions?.query) {
+      return;
+    }
+    const cleanup: { run?: () => void } = {};
+    permissions
+      .query({ name: "geolocation" as PermissionName })
+      .then((result) => {
+        const onChange = (): void => {
+          setShowLocationShareButton(result.state !== "granted");
+        };
+        onChange();
+        result.addEventListener("change", onChange);
+        cleanup.run = () => {
+          result.removeEventListener("change", onChange);
+        };
+      })
+      .catch(() => {
+        /* Rely on getCurrentPosition success in browsers without Permissions API. */
+      });
+    return () => {
+      cleanup.run?.();
+    };
+  }, []);
 
   async function loadNearby(target = position, targetRadius = radius): Promise<void> {
     setStatus("Locaties laden...");
@@ -62,6 +156,7 @@ export default function HomePage() {
   function requestUserLocation(options?: { silent?: boolean }): void {
     if (!navigator.geolocation) {
       setStatus("Locatie delen wordt niet ondersteund in deze browser.");
+      setShowLocationShareButton(false);
       return;
     }
 
@@ -70,6 +165,7 @@ export default function HomePage() {
     }
     navigator.geolocation.getCurrentPosition(
       (coords) => {
+        setShowLocationShareButton(false);
         const nextPosition = {
           lat: coords.coords.latitude,
           lng: coords.coords.longitude
@@ -86,6 +182,9 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!navigator.geolocation) {
+      queueMicrotask(() => {
+        setShowLocationShareButton(false);
+      });
       const timer = setTimeout(() => {
         void loadNearby(defaultCenter);
       }, 0);
@@ -100,216 +199,122 @@ export default function HomePage() {
   }, [temperatureFilter]);
 
   return (
-    <main style={{ position: "relative", height: "100dvh", width: "100%" }}>
+    <main className="ios-page-map">
       <MapView center={position} locations={locations} onSelect={setSelected} />
 
-      <div
-        style={{
-          position: "absolute",
-          top: 12,
-          left: 12,
-          right: 12,
-          zIndex: 500,
-          background: "rgba(255, 255, 255, 0.94)",
-          border: "1px solid #d4ddd7",
-          borderRadius: 12,
-          padding: "0.6rem 0.8rem",
-          display: "grid",
-          gap: "0.4rem",
-          boxShadow: "0 8px 20px rgba(10, 24, 12, 0.12)"
-        }}
-      >
-        <strong style={{ color: "#2e3330", letterSpacing: "0.02em" }}>
-          Waar kan ik een monstertje halen?
-        </strong>
-        <small style={{ color: "#3d4541" }}>{status}</small>
-        <small style={{ color: "#5a675f" }}>
-          Legenda: 🧊 Koud | 🥤 Kamertemperatuur | 🧊🥤 Beide | ❔ Onbekend
-        </small>
-        <button
-          type="button"
-          onClick={() => requestUserLocation()}
-          style={{
-            border: "1px solid #8edb79",
-            borderRadius: 10,
-            background: "#edf9e8",
-            padding: "0.45rem 0.65rem",
-            justifySelf: "start",
-            color: "#17461a",
-            fontWeight: 700
-          }}
-        >
-          Deel locatie
-        </button>
+      <div className="ios-top-overlay">
+        <div className="ios-top-overlay-main">
+          <div className="ios-frost ios-frost--top">
+            <h1 className="ios-text-title">Waar kan ik een monstertje halen?</h1>
+            <p className="ios-text-footnote">{status}</p>
+            <p className="ios-legend">
+              Legenda: <span className="ios-mono-slab" aria-label="Koud">🧊</span> koud &middot;{" "}
+              <span className="ios-mono-slab" aria-label="Kamertemperatuur">🥤</span> kamertemperatuur &middot;{" "}
+              <span className="ios-mono-slab" aria-label="Beide">🧊🥤</span> beide &middot; <span className="ios-mono-slab" aria-label="Onbekend">❔</span> onbekend
+            </p>
+          </div>
+        </div>
+        <div className="ios-bbar-stacked" role="toolbar" aria-label="Kaartacties">
+          {showLocationShareButton ? (
+            <button
+              type="button"
+              onClick={() => requestUserLocation()}
+              className="ios-bbar-icon-btn"
+              aria-label="Deel locatie"
+              title="Deel locatie"
+            >
+              <LocationShareIcon />
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => setShowSubmissionModal(true)}
+            className="ios-bbar-icon-btn"
+            aria-label="Nieuwe locatie toevoegen"
+            title="Nieuwe locatie"
+          >
+            <IconAddPlace />
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowClosestModal(true)}
+            className="ios-bbar-icon-btn"
+            aria-label="Dichtstbijzijnde winkels"
+            title="Dichtstbijzijnde winkels"
+          >
+            <IconStore />
+          </button>
+        </div>
       </div>
 
       {selected ? (
-        <div
-          style={{
-            position: "absolute",
-            left: 12,
-            right: 12,
-            bottom: 84,
-            zIndex: 500,
-            background: "rgba(255, 255, 255, 0.98)",
-            border: "1px solid #d4ddd7",
-            borderRadius: 16,
-            padding: "0.8rem",
-            display: "grid",
-            gap: "0.5rem",
-            maxHeight: "40dvh",
-            overflowY: "auto"
-          }}
-        >
-          <button
-            type="button"
-            onClick={() => setSelected(null)}
-            style={{
-              position: "absolute",
-              top: 10,
-              right: 10,
-              border: "1px solid #d4ddd7",
-              borderRadius: 10,
-              padding: "0.35rem 0.55rem",
-              background: "#f8faf9",
-              color: "#2e3330",
-              zIndex: 2
-            }}
-          >
-            Sluiten
-          </button>
-          <div
-            style={{
-              width: 42,
-              height: 5,
-              borderRadius: 999,
-              background: "#8edb79",
-              justifySelf: "center"
-            }}
-          />
-          <div style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem", paddingRight: "5rem" }}>
-            <strong>{selected.name}</strong>
-            <span>{selected.distanceKm.toFixed(2)} km</span>
+        <div className="ios-floating-card">
+          <div className="ios-card ios-card--sheet">
+            <button
+              type="button"
+              onClick={() => setSelected(null)}
+              className="ios-icon-btn"
+              aria-label="Sluiten"
+              title="Sluiten"
+            >
+              <IconClose />
+            </button>
+            <div className="ios-grabber" aria-hidden />
+            <div className="ios-locrow" style={{ paddingRight: "4.5rem" }}>
+              <p className="ios-text-title" style={{ fontSize: "1.05rem" }}>
+                {selected.name}
+              </p>
+              <span className="ios-mono-slab" style={{ fontSize: "0.9rem", color: "var(--ios-label-secondary)" }}>
+                {selected.distanceKm.toFixed(2)} km
+              </span>
+            </div>
+            <p className="ios-text-footnote">{selected.address}</p>
+            <p className="ios-text-footnote">Betrouwbaarheidsbadge: {getTrustBadge(selected.trustScore)}</p>
+            <NavAppButtons location={selected} />
+            <TemperatureVoteButtons
+              location={selected}
+              onVoted={(updated) => {
+                setSelected((current) => (current && current.id === updated.id ? { ...current, ...updated } : current));
+                setLocations((current) =>
+                  current.map((entry) => (entry.id === updated.id ? { ...entry, ...updated } : entry))
+                );
+              }}
+            />
+            <VoteButtons
+              location={selected}
+              onVoted={(updated) => {
+                setSelected((current) => (current && current.id === updated.id ? { ...current, ...updated } : current));
+                setLocations((current) =>
+                  current.map((entry) => (entry.id === updated.id ? { ...entry, ...updated } : entry))
+                );
+              }}
+            />
           </div>
-          <small>{selected.address}</small>
-          <small>Betrouwbaarheidsbadge: {getTrustBadge(selected.trustScore)}</small>
-          <NavAppButtons location={selected} />
-          <TemperatureVoteButtons
-            location={selected}
-            onVoted={(updated) => {
-              setSelected((current) => (current && current.id === updated.id ? { ...current, ...updated } : current));
-              setLocations((current) =>
-                current.map((entry) => (entry.id === updated.id ? { ...entry, ...updated } : entry))
-              );
-            }}
-          />
-          <VoteButtons
-            location={selected}
-            onVoted={(updated) => {
-              setSelected((current) => (current && current.id === updated.id ? { ...current, ...updated } : current));
-              setLocations((current) =>
-                current.map((entry) => (entry.id === updated.id ? { ...entry, ...updated } : entry))
-              );
-            }}
-          />
         </div>
       ) : null}
 
-      <div
-        style={{
-          position: "absolute",
-          left: 12,
-          right: 12,
-          bottom: 12,
-          zIndex: 500,
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: "0.6rem"
-        }}
-      >
-        <button
-          type="button"
-          onClick={() => setShowSubmissionModal(true)}
-            style={{
-              border: "1px solid #8edb79",
-              borderRadius: 14,
-              background: "#edf9e8",
-              padding: "0.95rem",
-              color: "#17461a",
-              fontWeight: 700
-            }}
-        >
-          Nieuwe locatie
-        </button>
-        <button
-          type="button"
-          onClick={() => setShowClosestModal(true)}
-            style={{
-              border: "1px solid #8edb79",
-              borderRadius: 14,
-              background: "#edf9e8",
-              padding: "0.95rem",
-              color: "#17461a",
-              fontWeight: 700
-            }}
-        >
-          Dichtstbijzijnde winkels
-        </button>
-      </div>
-
       {showSubmissionModal ? (
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            zIndex: 700,
-            background: "rgba(5, 11, 6, 0.25)",
-            padding: "1rem",
-            display: "grid",
-            alignItems: "end"
-          }}
-        >
+        <div className="ios-scrim" role="presentation">
           <div
-            style={{
-              position: "relative",
-              background: "rgba(255, 255, 255, 0.98)",
-              borderRadius: 16,
-              padding: "1rem",
-              display: "grid",
-              gap: "0.7rem",
-              maxHeight: "70dvh",
-              overflowY: "auto"
-            }}
+            className="ios-sheet"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-label="Nieuwe locatie"
           >
             <button
               type="button"
               onClick={() => setShowSubmissionModal(false)}
-              style={{
-                position: "absolute",
-                top: 10,
-                right: 10,
-                border: "1px solid #d4ddd7",
-                borderRadius: 10,
-                padding: "0.35rem 0.55rem",
-                background: "#f8faf9",
-                color: "#2e3330",
-                zIndex: 2
-              }}
+              className="ios-icon-btn"
+              aria-label="Sluiten"
+              title="Sluiten"
             >
-              Sluiten
+              <IconClose />
             </button>
-            <div
-              style={{
-                width: 42,
-                height: 5,
-                borderRadius: 999,
-                background: "#8edb79",
-                justifySelf: "center"
-              }}
-            />
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingRight: "5rem" }}>
-              <strong style={{ color: "#2e3330" }}>Nieuwe locatie</strong>
-            </div>
+            <div className="ios-grabber" aria-hidden />
+            <p className="ios-text-title" style={{ margin: "0 3rem 0 1rem" }}>
+              Nieuwe locatie
+            </p>
             <SubmissionForm
               currentLocation={position}
               onSubmitted={async () => {
@@ -322,59 +327,28 @@ export default function HomePage() {
       ) : null}
 
       {showClosestModal ? (
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            zIndex: 700,
-            background: "rgba(5, 11, 6, 0.25)",
-            padding: "1rem",
-            display: "grid",
-            alignItems: "end"
-          }}
-        >
+        <div className="ios-scrim" role="presentation">
           <div
-            style={{
-              position: "relative",
-              background: "rgba(255, 255, 255, 0.98)",
-              borderRadius: 16,
-              padding: "1rem",
-              display: "grid",
-              gap: "0.7rem",
-              maxHeight: "70dvh",
-              overflowY: "auto"
-            }}
+            className="ios-sheet"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-label="Dichtstbijzijnde winkels"
           >
             <button
               type="button"
               onClick={() => setShowClosestModal(false)}
-              style={{
-                position: "absolute",
-                top: 10,
-                right: 10,
-                border: "1px solid #d4ddd7",
-                borderRadius: 10,
-                padding: "0.35rem 0.55rem",
-                background: "#f8faf9",
-                color: "#2e3330",
-                zIndex: 2
-              }}
+              className="ios-icon-btn"
+              aria-label="Sluiten"
+              title="Sluiten"
             >
-              Sluiten
+              <IconClose />
             </button>
-            <div
-              style={{
-                width: 42,
-                height: 5,
-                borderRadius: 999,
-                background: "#8edb79",
-                justifySelf: "center"
-              }}
-            />
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingRight: "5rem" }}>
-              <strong style={{ color: "#2e3330" }}>Dichtstbijzijnde winkels</strong>
-            </div>
-            <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+            <div className="ios-grabber" aria-hidden />
+            <p className="ios-text-title" style={{ margin: "0 3rem 0 1rem" }}>
+              Dichtstbijzijnde winkels
+            </p>
+            <div className="ios-filters-row" style={{ margin: "0 1rem 0.5rem" }}>
               <label htmlFor="radius-km">Straal (km)</label>
               <input
                 id="radius-km"
@@ -388,18 +362,12 @@ export default function HomePage() {
               <button
                 type="button"
                 onClick={() => void loadNearby(position, radius)}
-                style={{
-                  border: "1px solid #c9d3cd",
-                  borderRadius: 10,
-                  padding: "0.4rem 0.6rem",
-                  background: "#f6f8f7",
-                  color: "#2e3a33"
-                }}
+                className="ios-btn ios-btn--secondary"
               >
                 Vernieuwen
               </button>
             </div>
-            <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+            <div className="ios-filters-row" style={{ margin: "0 1rem" }}>
               <label htmlFor="temperature-filter">Temperatuur</label>
               <select
                 id="temperature-filter"
@@ -417,16 +385,19 @@ export default function HomePage() {
                 <option value="unknown">Onbekend</option>
               </select>
             </div>
-            {locations.map((location) => (
-              <LocationCard
-                key={location.id}
-                location={location}
-                onSelect={(entry) => {
-                  setSelected(entry);
-                  setShowClosestModal(false);
-                }}
-              />
-            ))}
+            <div style={{ maxHeight: "55dvh", overflowY: "auto", padding: "0 0.5rem" }}>
+              {locations.map((location) => (
+                <div key={location.id} style={{ marginBottom: "0.5rem" }}>
+                  <LocationCard
+                    location={location}
+                    onSelect={(entry) => {
+                      setSelected(entry);
+                      setShowClosestModal(false);
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       ) : null}

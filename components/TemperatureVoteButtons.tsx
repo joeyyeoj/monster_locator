@@ -11,7 +11,7 @@ type Props = {
 const labels: Record<DisplayAvailabilityType, string> = {
   cold: "Koud",
   shelf: "Kamertemperatuur",
-  both: "Both",
+  both: "Beide",
   unknown: "Onbekend"
 };
 
@@ -38,51 +38,25 @@ export default function TemperatureVoteButtons({ location, onVoted }: Props) {
   }
 
   return (
-    <div style={{ display: "grid", gap: "0.4rem" }}>
-      <small style={{ color: "#5a675f" }}>Temperatuur stemmen</small>
-      <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
-        <button
-          type="button"
-          onClick={() => vote("cold")}
-          style={{
-            border: "1px solid #8edb79",
-            borderRadius: 10,
-            padding: "0.45rem 0.65rem",
-            background: "#edf9e8",
-            color: "#17461a"
-          }}
-        >
+    <div className="ios-temp-row">
+      <p className="ios-text-footnote" style={{ margin: 0 }}>
+        Temperatuur stemmen
+      </p>
+      <div className="ios-temp-btns">
+        <button type="button" onClick={() => vote("cold")} className="ios-btn ios-btn--tint-ghost">
           Koud
         </button>
-        <button
-          type="button"
-          onClick={() => vote("shelf")}
-          style={{
-            border: "1px solid #8edb79",
-            borderRadius: 10,
-            padding: "0.45rem 0.65rem",
-            background: "#edf9e8",
-            color: "#17461a"
-          }}
-        >
+        <button type="button" onClick={() => vote("shelf")} className="ios-btn ios-btn--tint-ghost">
           Kamertemperatuur
         </button>
-        <button
-          type="button"
-          onClick={() => vote("both")}
-          style={{
-            border: "1px solid #8edb79",
-            borderRadius: 10,
-            padding: "0.45rem 0.65rem",
-            background: "#edf9e8",
-            color: "#17461a"
-          }}
-        >
-          Both
+        <button type="button" onClick={() => vote("both")} className="ios-btn ios-btn--tint-ghost">
+          Beide
         </button>
       </div>
-      <small style={{ color: "#5a675f" }}>Huidige temperatuur: {labels[location.availabilityType]}</small>
-      {status ? <small style={{ color: "#4f9a3e" }}>{status}</small> : null}
+      <p className="ios-text-caption-2" style={{ margin: 0 }}>
+        Huidige temperatuur: {labels[location.availabilityType]}
+      </p>
+      {status ? <p className="ios-status-ok" style={{ margin: 0 }}>{status}</p> : null}
     </div>
   );
 }

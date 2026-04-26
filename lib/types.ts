@@ -11,6 +11,7 @@ export type LocationRecord = {
   placeType: string;
   lat: number;
   lng: number;
+  photoUrl?: string | null;
   availabilityType: DisplayAvailabilityType;
   sourceType: SourceType;
   trustScore: number;
@@ -30,6 +31,8 @@ export type SubmissionPayload = {
   placeType: string;
   availabilityType: AvailabilityType;
   note?: string;
+  /** Set by the API after optional blob upload; not sent from the browser as JSON. */
+  photoUrl?: string | null;
 };
 
 export type ResolvedSubmissionPayload = SubmissionPayload & {

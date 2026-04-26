@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import type { AvailabilityType, DuplicateCandidate } from "@/lib/types";
 
 type Props = {
@@ -13,25 +13,46 @@ export default function SubmissionForm({ currentLocation, onSubmitted }: Props) 
   const [address, setAddress] = useState("");
   const [availabilityType, setAvailabilityType] = useState<AvailabilityType>("cold");
   const [note, setNote] = useState("");
+  const [photo, setPhoto] = useState<File | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [duplicateMessage, setDuplicateMessage] = useState<string | null>(null);
   const [duplicateCandidates, setDuplicateCandidates] = useState<DuplicateCandidate[]>([]);
+
+  const photoPreviewUrl = useMemo(() => (photo ? URL.createObjectURL(photo) : null), [photo]);
+
+  useEffect(() => {
+    return () => {
+      if (photoPreviewUrl) {
+        URL.revokeObjectURL(photoPreviewUrl);
+      }
+    };
+  }, [photoPreviewUrl]);
+
+  function buildFormData(confirmDifferentLocation: boolean): FormData {
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("address", address);
+    formData.append("availabilityType", availabilityType);
+    if (note.trim() !== "") {
+      formData.append("note", note.trim());
+    }
+    formData.append("lat", String(currentLocation.lat));
+    formData.append("lng", String(currentLocation.lng));
+    if (confirmDifferentLocation) {
+      formData.append("confirmDifferentLocation", "true");
+    }
+    if (photo) {
+      formData.append("photo", photo);
+    }
+    return formData;
+  }
 
   async function submitSubmission(confirmDifferentLocation: boolean): Promise<void> {
     setStatus("Bezig met versturen...");
 
     const response = await fetch("/api/submissions", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name,
-        address,
-        availabilityType,
-        note,
-        lat: currentLocation.lat,
-        lng: currentLocation.lng,
-        confirmDifferentLocation
-      })
+      body: buildFormData(confirmDifferentLocation)
     });
 
     if (response.ok) {
@@ -41,6 +62,7 @@ export default function SubmissionForm({ currentLocation, onSubmitted }: Props) 
       setName("");
       setAddress("");
       setNote("");
+      setPhoto(null);
       await onSubmitted();
       return;
     }
@@ -71,40 +93,52 @@ export default function SubmissionForm({ currentLocation, onSubmitted }: Props) 
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      style={{
-        background: "rgba(255, 255, 255, 0.98)",
-        border: "1px solid #d4ddd7",
-        borderRadius: 12,
-        padding: "1rem",
-        display: "grid",
-        gap: "0.6rem"
-      }}
-    >
-      <strong style={{ color: "#4f9a3e", letterSpacing: "0.02em" }}>Nieuwe locatie toevoegen</strong>
-      <small style={{ color: "#5a675f" }}>
-        We gebruiken je huidige locatie als basis voor deze inzending.
-      </small>
+    <form onSubmit={handleSubmit} className="ios-form-inner">
+      <h2 className="ios-text-title">Nieuwe locatie toevoegen</h2>
+      <p className="ios-text-footnote">We gebruiken je huidige locatie als basis voor deze inzending.</p>
       <input
         value={name}
         onChange={(e) => setName(e.target.value)}
         required
         placeholder="Naam van de winkel"
+        autoComplete="off"
       />
       <input
         value={address}
         onChange={(e) => setAddress(e.target.value)}
         required
         placeholder="Adres"
+        autoComplete="street-address"
       />
       <select
         value={availabilityType}
         onChange={(e) => setAvailabilityType(e.target.value as AvailabilityType)}
+        aria-label="Beschikbaarheid in de winkel"
       >
         <option value="cold">Koud</option>
         <option value="shelf">Kamertemperatuur</option>
       </select>
+
+      <label className="ios-text-footnote" style={{ display: "grid", gap: "0.35rem" }}>
+        Optionele foto (max. 4 MB, JPEG/PNG/WebP)
+        <input
+          type="file"
+          className="ios-pill-browse"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={(event) => {
+            const file = event.target.files?.[0] ?? null;
+            setPhoto(file);
+          }}
+        />
+      </label>
+      {photoPreviewUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element -- blob: preview URL is not compatible with next/image without a custom loader
+        <img
+          src={photoPreviewUrl}
+          alt="Voorbeeld van gekozen foto"
+          className="ios-pill-preview"
+        />
+      ) : null}
 
       <textarea
         value={note}
@@ -113,61 +147,35 @@ export default function SubmissionForm({ currentLocation, onSubmitted }: Props) 
         rows={3}
       />
 
-      <button
-        type="submit"
-        style={{
-          borderRadius: 10,
-          padding: "0.6rem",
-          border: "1px solid #8edb79",
-          background: "#edf9e8",
-          color: "#17461a",
-          fontWeight: 700
-        }}
-      >
+      <button type="submit" className="ios-btn ios-btn--primary" style={{ width: "100%", minHeight: 48, marginTop: "0.25rem" }}>
         Versturen
       </button>
       {duplicateMessage ? (
-        <div
-          style={{
-            border: "1px solid #d9e3dc",
-            borderRadius: 10,
-            padding: "0.65rem",
-            background: "#f7faf8",
-            display: "grid",
-            gap: "0.45rem"
-          }}
-        >
-          <small style={{ color: "#36553d" }}>{duplicateMessage}</small>
+        <div className="ios-duplicate" style={{ margin: "0" }}>
+          <p className="ios-text-footnote" style={{ color: "var(--ios-label)" }}>
+            {duplicateMessage}
+          </p>
           {duplicateCandidates.map((candidate) => (
-            <div key={candidate.id} style={{ borderTop: "1px solid #e4ece7", paddingTop: "0.35rem" }}>
-              <small>
-                <strong>{candidate.name}</strong> - {candidate.address}
-              </small>
-              <br />
-              <small style={{ color: "#5a675f" }}>
-                Afstand: {candidate.distanceKm.toFixed(2)} km | Match:{" "}
-                {Math.round(candidate.duplicateScore * 100)}%
-              </small>
+            <div key={candidate.id} className="ios-candidate">
+              <p className="ios-text-body" style={{ fontSize: "0.875rem" }}>
+                <strong>{candidate.name}</strong> <span className="ios-dim-text">·</span> {candidate.address}
+              </p>
+              <p className="ios-text-caption-2" style={{ marginTop: 4 }}>
+                Afstand: {candidate.distanceKm.toFixed(2)} km &middot; match {Math.round(candidate.duplicateScore * 100)}%
+              </p>
             </div>
           ))}
           <button
             type="button"
             onClick={() => void submitSubmission(true)}
-            style={{
-              marginTop: "0.2rem",
-              borderRadius: 10,
-              padding: "0.55rem 0.65rem",
-              border: "1px solid #9fb9a6",
-              background: "#ffffff",
-              color: "#27352d",
-              fontWeight: 600
-            }}
+            className="ios-btn ios-btn--secondary"
+            style={{ width: "100%", marginTop: "0.25rem" }}
           >
             Toch als nieuwe locatie toevoegen
           </button>
         </div>
       ) : null}
-      {status ? <small style={{ color: "#4f9a3e" }}>{status}</small> : null}
+      {status ? <p className="ios-status-ok" style={{ margin: 0 }}>{status}</p> : null}
     </form>
   );
 }
