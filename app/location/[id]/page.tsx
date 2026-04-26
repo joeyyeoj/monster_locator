@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import LocationDetailClient from "@/components/LocationDetailClient";
@@ -117,19 +116,6 @@ export default async function LocationDetailPage({ params }: Props) {
           Bevestigd: {location.confirmCount} · Afgekeurd: {location.denyCount} · Vertrouwensscore:{" "}
           {location.trustScore}
         </p>
-        {location.photoUrl ? (
-          <div className="ios-hero" style={{ margin: "0.75rem 0" }}>
-            <Image
-              className="ios-hero--inner"
-              src={location.photoUrl}
-              alt={`Foto bij ${location.name}`}
-              width={800}
-              height={600}
-              sizes="(max-width: 760px) 100vw, 640px"
-              style={{ width: "100%", height: "auto", objectFit: "contain" }}
-            />
-          </div>
-        ) : null}
         <LocationDetailClient initialLocation={location} />
       </section>
     </main>

@@ -734,3 +734,28 @@ export async function castTemperatureVote(
     return hydrateTrust(location);
   }
 }
+
+export async function setLocationPhotoUrl(
+  locationId: string,
+  photoUrl: string
+): Promise<LocationRecord | null> {
+  try {
+    const existing = await prisma.location.findUnique({ where: { id: locationId }, select: { id: true } });
+    if (!existing) {
+      return null;
+    }
+    await prisma.location.update({
+      where: { id: locationId },
+      data: { photoUrl }
+    });
+    return getLocationById(locationId);
+  } catch {
+    const mem = memoryLocations.find((entry) => entry.id === locationId);
+    if (!mem) {
+      return null;
+    }
+    mem.photoUrl = photoUrl;
+    mem.updatedAt = new Date().toISOString();
+    return hydrateTrust(mem);
+  }
+}

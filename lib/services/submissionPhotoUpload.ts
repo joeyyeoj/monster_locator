@@ -41,3 +41,15 @@ export async function uploadSubmissionPhotoToBlob(file: File): Promise<string> {
   const blob = await put(pathname, file, { access: "public", token });
   return blob.url;
 }
+
+export async function uploadLocationPhotoToBlob(file: File, locationId: string): Promise<string> {
+  assertValidSubmissionPhoto(file);
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  if (!token) {
+    throw new Error("MISSING_BLOB_TOKEN");
+  }
+  const ext = extensionForMime(file.type);
+  const pathname = `locations/${locationId}/${Date.now()}-${randomUUID()}.${ext}`;
+  const blob = await put(pathname, file, { access: "public", token });
+  return blob.url;
+}

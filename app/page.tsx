@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import LocationCard from "@/components/LocationCard";
+import LocationPhotoBlock from "@/components/LocationPhotoBlock";
 import SubmissionForm from "@/components/SubmissionForm";
 import TemperatureVoteButtons from "@/components/TemperatureVoteButtons";
 import VoteButtons from "@/components/VoteButtons";
@@ -276,6 +277,16 @@ export default function HomePage() {
                 <span className="ios-vote-stat-trust">Vertrouwen: {selected.trustScore}</span>
               </p>
             </div>
+            <LocationPhotoBlock
+              variant="sheet"
+              location={selected}
+              onUpdated={(loc) => {
+                setSelected((c) => (c && c.id === loc.id ? { ...c, ...loc, distanceKm: c.distanceKm } : c));
+                setLocations((list) =>
+                  list.map((e) => (e.id === loc.id ? { ...e, ...loc, distanceKm: e.distanceKm } : e))
+                );
+              }}
+            />
             <VoteButtons
               location={selected}
               onVoted={(updated) => {
