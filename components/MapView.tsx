@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
+import { MapContainer, Marker, Popup, TileLayer, useMap, ZoomControl } from "react-leaflet";
 import { divIcon } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { NearbyLocation } from "@/lib/types";
@@ -90,7 +90,9 @@ export default function MapView({ center, locations, onSelect, height = "100dvh"
         zoom={12}
         style={{ height, width: "100%" }}
         scrollWheelZoom
+        zoomControl={false}
       >
+        <ZoomControl position="bottomright" />
         <RecenterMap center={center} />
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
