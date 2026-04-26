@@ -1,11 +1,13 @@
-import type {
-  AvailabilityType,
-  DisplayAvailabilityType,
-  DuplicateCandidate,
-  LocationRecord,
-  NearbyLocation,
-  ResolvedSubmissionPayload,
-  VoteType
+import {
+  emptyTemperatureVoteCounts,
+  type AvailabilityType,
+  type DisplayAvailabilityType,
+  type DuplicateCandidate,
+  type LocationRecord,
+  type NearbyLocation,
+  type ResolvedSubmissionPayload,
+  type TemperatureVoteCounts,
+  type VoteType
 } from "@/lib/types";
 import { prisma } from "@/lib/db/prisma";
 import { seedLocations } from "@/lib/data/seedLocations";
@@ -38,6 +40,7 @@ const memoryLocations: LocationRecord[] = seedLocations.map((seed, index) => {
     trustScore: 0,
     confirmCount: 0,
     denyCount: 0,
+    temperatureVoteCounts: emptyTemperatureVoteCounts,
     createdAt: now,
     updatedAt: now
   };
@@ -46,6 +49,87 @@ const memoryLocations: LocationRecord[] = seedLocations.map((seed, index) => {
 const memoryVotes: VoteRecord[] = [];
 const memoryTemperatureVotes: TemperatureVoteRecord[] = [];
 const temperatureVoteNote = "temp_vote";
+
+/** Prisma: alleen benodigde scalars + relaties; `photoUrl` sinds migratie add_submission_photo_url. */
+const locationListSelect = {
+  id: true,
+  name: true,
+  address: true,
+  placeType: true,
+  lat: true,
+  lng: true,
+  photoUrl: true,
+  sourceType: true,
+  availabilityType: true,
+  trustScore: true,
+  moderationFlag: true,
+  createdAt: true,
+  updatedAt: true,
+  votes: true,
+  submissions: {
+    select: {
+      submitterHash: true,
+      availabilityType: true,
+      note: true
+    }
+  }
+} as const;
+
+
+/** Groepeert per stemgerechtigde: beide = iemand met zowel koud- als winkel-temperatuurstem. */
+function buildTemperatureVoteCounts(
+  entries: Array<{ submitterHash: string; availabilityType: AvailabilityType }>
+): TemperatureVoteCounts {
+  const byVoter = new Map<string, Set<AvailabilityType>>();
+  for (const { submitterHash, availabilityType } of entries) {
+    if (availabilityType === "unknown") {
+      continue;
+    }
+    if (!byVoter.has(submitterHash)) {
+      byVoter.set(submitterHash, new Set());
+    }
+    byVoter.get(submitterHash)!.add(availabilityType);
+  }
+  let cold = 0;
+  let shelf = 0;
+  let both = 0;
+  for (const types of byVoter.values()) {
+    const hasCold = types.has("cold");
+    const hasShelf = types.has("shelf");
+    if (hasCold && hasShelf) {
+      both += 1;
+    } else if (hasCold) {
+      cold += 1;
+    } else if (hasShelf) {
+      shelf += 1;
+    }
+  }
+  return { cold, shelf, both };
+}
+
+function temperatureVoteCountsForSubmissions(
+  submissions: Array<{ submitterHash: string; availabilityType: string; note: string | null }>
+): TemperatureVoteCounts {
+  return buildTemperatureVoteCounts(
+    submissions
+      .filter((submission) => submission.note === temperatureVoteNote)
+      .map((submission) => ({
+        submitterHash: submission.submitterHash,
+        availabilityType: normalizeAvailability(submission.availabilityType)
+      }))
+  );
+}
+
+function temperatureVoteCountsForMemoryLocation(locationId: string): TemperatureVoteCounts {
+  return buildTemperatureVoteCounts(
+    memoryTemperatureVotes
+      .filter((vote) => vote.locationId === locationId)
+      .map((vote) => ({
+        submitterHash: vote.voterHash,
+        availabilityType: vote.availabilityType
+      }))
+  );
+}
 
 function normalizeAvailability(value: string): AvailabilityType {
   if (value === "cold" || value === "shelf" || value === "unknown") {
@@ -68,7 +152,8 @@ function hydrateTrust(location: LocationRecord): LocationRecord {
     ),
     confirmCount,
     denyCount,
-    trustScore: trust.trustScore
+    trustScore: trust.trustScore,
+    temperatureVoteCounts: temperatureVoteCountsForMemoryLocation(location.id)
   };
 }
 
@@ -270,8 +355,8 @@ export async function getNearbyLocations(params: {
 
   try {
     const locations = await prisma.location.findMany({
-      include: { votes: true, submissions: true },
-      where: { moderationFlag: false }
+      where: { moderationFlag: false },
+      select: locationListSelect
     });
 
     return locations
@@ -298,6 +383,7 @@ export async function getNearbyLocations(params: {
           trustScore: trust.trustScore,
           confirmCount,
           denyCount,
+          temperatureVoteCounts: temperatureVoteCountsForSubmissions(location.submissions),
           createdAt: location.createdAt.toISOString(),
           updatedAt: location.updatedAt.toISOString(),
           distanceKm
@@ -331,7 +417,7 @@ export async function getLocationById(id: string): Promise<LocationRecord | null
   try {
     const location = await prisma.location.findUnique({
       where: { id },
-      include: { votes: true, submissions: true }
+      select: locationListSelect
     });
     if (!location) {
       return null;
@@ -356,6 +442,7 @@ export async function getLocationById(id: string): Promise<LocationRecord | null
       trustScore: trust.trustScore,
       confirmCount,
       denyCount,
+      temperatureVoteCounts: temperatureVoteCountsForSubmissions(location.submissions),
       createdAt: location.createdAt.toISOString(),
       updatedAt: location.updatedAt.toISOString()
     };
@@ -400,7 +487,16 @@ export async function createSubmission(
   const shouldForceCreate = options?.forceCreate ?? false;
 
   try {
-    const nearby = await prisma.location.findMany();
+    const nearby = await prisma.location.findMany({
+      select: {
+        id: true,
+        name: true,
+        address: true,
+        lat: true,
+        lng: true,
+        availabilityType: true
+      }
+    });
     const duplicateCheck = evaluateDuplicateCandidates(
       payload,
       nearby.map((location) => ({
@@ -498,6 +594,7 @@ export async function createSubmission(
       trustScore: 0,
       confirmCount: 0,
       denyCount: 0,
+      temperatureVoteCounts: emptyTemperatureVoteCounts,
       createdAt: now,
       updatedAt: now
     };
@@ -560,7 +657,14 @@ export async function castTemperatureVote(
 ): Promise<LocationRecord | null> {
   try {
     const location = await prisma.location.findUnique({
-      where: { id: locationId }
+      where: { id: locationId },
+      select: {
+        name: true,
+        address: true,
+        placeType: true,
+        lat: true,
+        lng: true
+      }
     });
     if (!location) {
       return null;

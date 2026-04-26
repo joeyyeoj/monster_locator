@@ -1,22 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import type { DisplayAvailabilityType, LocationRecord } from "@/lib/types";
+import { emptyTemperatureVoteCounts, type LocationRecord } from "@/lib/types";
 
 type Props = {
   location: LocationRecord;
   onVoted: (location: LocationRecord) => void;
 };
 
-const labels: Record<DisplayAvailabilityType, string> = {
-  cold: "Koud",
-  shelf: "Kamertemperatuur",
-  both: "Beide",
-  unknown: "Onbekend"
-};
-
 export default function TemperatureVoteButtons({ location, onVoted }: Props) {
   const [status, setStatus] = useState<string | null>(null);
+  const tc = location.temperatureVoteCounts ?? emptyTemperatureVoteCounts;
 
   async function vote(availabilityType: "cold" | "shelf" | "both"): Promise<void> {
     setStatus("Temperatuurstem opslaan...");
@@ -39,22 +33,19 @@ export default function TemperatureVoteButtons({ location, onVoted }: Props) {
 
   return (
     <div className="ios-temp-row">
-      <p className="ios-text-footnote" style={{ margin: 0 }}>
-        Temperatuur stemmen
-      </p>
       <div className="ios-temp-btns">
-        <button type="button" onClick={() => vote("cold")} className="ios-btn ios-btn--tint-ghost">
+        <button type="button" onClick={() => vote("cold")} className="ios-btn ios-btn--temp-cold">
           Koud
         </button>
-        <button type="button" onClick={() => vote("shelf")} className="ios-btn ios-btn--tint-ghost">
+        <button type="button" onClick={() => vote("shelf")} className="ios-btn ios-btn--temp-shelf">
           Kamertemperatuur
         </button>
-        <button type="button" onClick={() => vote("both")} className="ios-btn ios-btn--tint-ghost">
+        <button type="button" onClick={() => vote("both")} className="ios-btn ios-btn--temp-both">
           Beide
         </button>
       </div>
-      <p className="ios-text-caption-2" style={{ margin: 0 }}>
-        Huidige temperatuur: {labels[location.availabilityType]}
+      <p className="ios-text-caption-2" style={{ margin: 0, marginTop: "0.35rem" }}>
+        Koud: {tc.cold} · Kamertemperatuur: {tc.shelf} · Beide: {tc.both}
       </p>
       {status ? <p className="ios-status-ok" style={{ margin: 0 }}>{status}</p> : null}
     </div>

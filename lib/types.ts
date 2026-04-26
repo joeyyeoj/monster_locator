@@ -17,6 +17,7 @@ export type LocationRecord = {
   trustScore: number;
   confirmCount: number;
   denyCount: number;
+  temperatureVoteCounts: TemperatureVoteCounts;
   createdAt: string;
   updatedAt: string;
 };
@@ -58,6 +59,14 @@ export type TemperatureVotePayload = {
   locationId: string;
   availabilityType: "cold" | "shelf" | "both";
 };
+
+export type TemperatureVoteCounts = {
+  cold: number;
+  shelf: number;
+  both: number;
+};
+
+export const emptyTemperatureVoteCounts: TemperatureVoteCounts = { cold: 0, shelf: 0, both: 0 };
 
 export type DuplicateCandidate = {
   id: string;

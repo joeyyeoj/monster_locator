@@ -53,19 +53,6 @@ export default function VoteButtons({ location, onVoted }: Props) {
           Klopt niet
         </button>
       </div>
-      <p className="ios-vote-stats-line" style={{ margin: 0 }}>
-        <span className="ios-vote-stat-yes">Bevestigd: {location.confirmCount}</span>
-        <span className="ios-vote-sep" aria-hidden>
-          {" "}
-          ·{" "}
-        </span>
-        <span className="ios-vote-stat-no">Afgekeurd: {location.denyCount}</span>
-        <span className="ios-vote-sep" aria-hidden>
-          {" "}
-          ·{" "}
-        </span>
-        <span className="ios-vote-stat-trust">Vertrouwen: {location.trustScore}</span>
-      </p>
       {status ? <p className={voteFeedbackClass(status)} style={{ margin: 0 }}>{status}</p> : null}
     </div>
   );

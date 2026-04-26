@@ -7,11 +7,11 @@ const siteUrl = getSiteUrl();
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Monster Finder NL",
-    template: "%s | Monster Finder NL"
+    default: "Waar kan ik een monstertje halen?",
+    template: "%s | Waar kan ik een monstertje halen?"
   },
   description: "Vind de dichtstbijzijnde winkel met suikervrije Monster Energy.",
-  applicationName: "Monster Finder NL",
+  applicationName: "Waar kan ik een monstertje halen?",
   alternates: {
     canonical: "/"
   },
@@ -19,13 +19,13 @@ export const metadata: Metadata = {
     type: "website",
     locale: "nl_NL",
     url: siteUrl,
-    title: "Monster Finder NL",
+    title: "Waar kan ik een monstertje halen?",
     description: "Vind de dichtstbijzijnde winkel met suikervrije Monster Energy.",
-    siteName: "Monster Finder NL"
+    siteName: "Waar kan ik een monstertje halen?"
   },
   twitter: {
     card: "summary_large_image",
-    title: "Monster Finder NL",
+    title: "Waar kan ik een monstertje halen?",
     description: "Vind de dichtstbijzijnde winkel met suikervrije Monster Energy."
   },
   robots: {

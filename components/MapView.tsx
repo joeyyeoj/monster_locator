@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 import { divIcon } from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -47,6 +48,24 @@ const userIcon = divIcon({
 });
 
 export default function MapView({ center, locations, onSelect, height = "100dvh" }: MapViewProps) {
+  /** React 18 Strict Mode double-mounts; mounting Leaflet only on the client avoids container reuse / appendChild errors. */
+  const [mapReady, setMapReady] = useState(false);
+  useEffect(() => {
+    queueMicrotask(() => {
+      setMapReady(true);
+    });
+  }, []);
+
+  if (!mapReady) {
+    return (
+      <div
+        className="ios-map-chrome"
+        style={{ width: "100%", height, background: "var(--ios-bg-elevated)" }}
+        aria-hidden
+      />
+    );
+  }
+
   return (
     <div className="ios-map-chrome" style={{ width: "100%" }}>
       <MapContainer

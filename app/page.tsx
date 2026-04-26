@@ -3,7 +3,6 @@
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import LocationCard from "@/components/LocationCard";
-import NavAppButtons from "@/components/NavAppButtons";
 import SubmissionForm from "@/components/SubmissionForm";
 import TemperatureVoteButtons from "@/components/TemperatureVoteButtons";
 import VoteButtons from "@/components/VoteButtons";
@@ -72,16 +71,6 @@ function IconStore() {
       <path d="M20 4H4v2h16V4zm1 10v-2l-1-5H4l-1 5v2h1v6h10v-6h4v6h2v-6h1zm-9 4H6v-4h6v4z" />
     </svg>
   );
-}
-
-function getTrustBadge(score: number): string {
-  if (score >= 3) {
-    return "Bevestigd";
-  }
-  if (score < 0) {
-    return "Betwist";
-  }
-  return "Nieuw";
 }
 
 export default function HomePage() {
@@ -260,18 +249,32 @@ export default function HomePage() {
               <IconClose />
             </button>
             <div className="ios-grabber" aria-hidden />
-            <div className="ios-locrow" style={{ paddingRight: "4.5rem" }}>
+            <div style={{ paddingRight: "4.5rem" }}>
               <p className="ios-text-title" style={{ fontSize: "1.05rem" }}>
                 {selected.name}
               </p>
-              <span className="ios-mono-slab" style={{ fontSize: "0.9rem", color: "var(--ios-label-secondary)" }}>
-                {selected.distanceKm.toFixed(2)} km
-              </span>
+              <p className="ios-text-footnote ios-card-locline" style={{ marginTop: "0.4rem" }}>
+                {selected.address}
+                <span aria-hidden="true"> - </span>
+                <span className="ios-mono-slab" style={{ color: "var(--ios-label-secondary)" }}>
+                  {selected.distanceKm.toFixed(2)} km
+                </span>
+              </p>
+              <p className="ios-vote-stats-line" style={{ margin: 0, marginTop: "0.4rem" }}>
+                <span className="ios-vote-stat-yes">Bevestigd: {selected.confirmCount}</span>
+                <span className="ios-vote-sep" aria-hidden>
+                  {" "}
+                  ·{" "}
+                </span>
+                <span className="ios-vote-stat-no">Afgekeurd: {selected.denyCount}</span>
+                <span className="ios-vote-sep" aria-hidden>
+                  {" "}
+                  ·{" "}
+                </span>
+                <span className="ios-vote-stat-trust">Vertrouwen: {selected.trustScore}</span>
+              </p>
             </div>
-            <p className="ios-text-footnote">{selected.address}</p>
-            <p className="ios-text-footnote">Betrouwbaarheidsbadge: {getTrustBadge(selected.trustScore)}</p>
-            <NavAppButtons location={selected} />
-            <TemperatureVoteButtons
+            <VoteButtons
               location={selected}
               onVoted={(updated) => {
                 setSelected((current) => (current && current.id === updated.id ? { ...current, ...updated } : current));
@@ -280,7 +283,7 @@ export default function HomePage() {
                 );
               }}
             />
-            <VoteButtons
+            <TemperatureVoteButtons
               location={selected}
               onVoted={(updated) => {
                 setSelected((current) => (current && current.id === updated.id ? { ...current, ...updated } : current));
