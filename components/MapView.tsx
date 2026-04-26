@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
+import { useEffect, useRef, useState } from "react";
+import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import { divIcon } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { NearbyLocation } from "@/lib/types";
@@ -47,6 +47,23 @@ const userIcon = divIcon({
   iconAnchor: [12, 12]
 });
 
+/** `MapContainer` only uses `center` on first mount; pan when the parent center changes (bijv. na geolocatie). */
+function RecenterMap({ center }: { center: { lat: number; lng: number } }) {
+  const map = useMap();
+  const lastCenter = useRef<{ lat: number; lng: number } | null>(null);
+  useEffect(() => {
+    const prev = lastCenter.current;
+    if (prev && prev.lat === center.lat && prev.lng === center.lng) {
+      return;
+    }
+    if (prev !== null) {
+      map.flyTo([center.lat, center.lng], map.getZoom(), { duration: 0.55 });
+    }
+    lastCenter.current = { lat: center.lat, lng: center.lng };
+  }, [map, center.lat, center.lng]);
+  return null;
+}
+
 export default function MapView({ center, locations, onSelect, height = "100dvh" }: MapViewProps) {
   /** React 18 Strict Mode double-mounts; mounting Leaflet only on the client avoids container reuse / appendChild errors. */
   const [mapReady, setMapReady] = useState(false);
@@ -74,6 +91,7 @@ export default function MapView({ center, locations, onSelect, height = "100dvh"
         style={{ height, width: "100%" }}
         scrollWheelZoom
       >
+        <RecenterMap center={center} />
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

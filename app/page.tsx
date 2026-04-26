@@ -133,12 +133,14 @@ export default function HomePage() {
 
     const data = (await response.json()) as { locations: NearbyLocation[] };
     setLocations(data.locations);
-    if (data.locations.length > 0) {
+    const n = data.locations.length;
+    if (n > 0) {
       setSelected(data.locations[0]);
-      setStatus(`${data.locations.length} locaties geladen.`);
+      const locWord = n === 1 ? "locatie" : "locaties";
+      setStatus(`${n} ${locWord} geladen binnen ${targetRadius} km.`);
     } else {
       setSelected(null);
-      setStatus("Nog geen locaties in deze straal.");
+      setStatus(`Nog geen locaties binnen ${targetRadius} km.`);
     }
   }
 
